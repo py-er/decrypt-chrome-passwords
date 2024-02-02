@@ -10,14 +10,13 @@ from Cryptodome.Cipher import AES
 import shutil
 import csv
 
-#GLOBAL CONSTANT
-CHROME_PATH_LOCAL_STATE = os.path.normpath(r"%s\AppData\Local\Google\Chrome\User Data\Local State"%(os.environ['USERPROFILE']))
-CHROME_PATH = os.path.normpath(r"%s\AppData\Local\Google\Chrome\User Data"%(os.environ['USERPROFILE']))
+#Set your path for your files
+FILE_PATH = os.path.normpath(r"")
 
 def get_secret_key():
     try:
         #(1) Get secretkey from chrome local state
-        with open( CHROME_PATH_LOCAL_STATE, "r", encoding='utf-8') as f:
+        with open( f"{FILE_PATH}/Local State", "r", encoding='utf-8') as f:
             local_state = f.read()
             local_state = json.loads(local_state)
         secret_key = base64.b64decode(local_state["os_crypt"]["encrypted_key"])
@@ -72,14 +71,14 @@ if __name__ == '__main__':
             #(1) Get secret key
             secret_key = get_secret_key()
             #Search user profile or default folder (this is where the encrypted login password is stored)
-            folders = [element for element in os.listdir(CHROME_PATH) if re.search("^Profile*|^Default$",element)!=None]
+            folders = [element for element in os.listdir(FILE_PATH) if re.search("^Profile*|^Default$",element)!=None]
             for folder in folders:
             	#(2) Get ciphertext from sqlite database
-                chrome_path_login_db = os.path.normpath(r"%s\%s\Login Data"%(CHROME_PATH,folder))
+                chrome_path_login_db = os.path.normpath(r"%s\%s\Login Data"%(FILE_PATH,folder))
                 conn = get_db_connection(chrome_path_login_db)
                 if(secret_key and conn):
                     cursor = conn.cursor()
-                    cursor.execute("SELECT action_url, username_value, password_value FROM logins")
+                    cursor.execute("SELECT origin_url, username_value, password_value FROM logins")
                     for index,login in enumerate(cursor.fetchall()):
                         url = login[0]
                         username = login[1]
